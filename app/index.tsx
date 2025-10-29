@@ -23,9 +23,22 @@ export default function Index() {
     initialize();
   }, []);
 
+  // Reload images when returning from edit screen
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadEditedImages();
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, []);
+
   const loadEditedImages = async () => {
-    const images = await getEditedImages();
-    setEditedImages(images as EditedImage[]);
+    try {
+      const images = await getEditedImages();
+      setEditedImages(images as EditedImage[]);
+    } catch (error) {
+      console.error('Error loading images:', error);
+    }
   };
 
   const pickImage = async () => {
@@ -50,22 +63,36 @@ export default function Index() {
     }
   };
 
+
+
   const deleteImage = async (id: number) => {
-    await deleteEditedImage(id);
-    loadEditedImages();
+    try {
+      await deleteEditedImage(id);
+      loadEditedImages();
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      Alert.alert('Error', 'Failed to delete image');
+    }
   };
 
   const renderItem = ({ item }: { item: EditedImage }) => (
     <View style={{ margin: 10, alignItems: 'center' }}>
-      <Image source={{ uri: item.edited_uri }} style={{ width: 100, height: 100 }} />
+      <TouchableOpacity onPress={() => openImage(item.edited_uri)}>
+        <Image source={{ uri: item.edited_uri }} style={{ width: 100, height: 100, borderRadius: 5 }} />
+      </TouchableOpacity>
       <TouchableOpacity
-        style={{ backgroundColor: 'red', padding: 5, marginTop: 5 }}
+        style={{ backgroundColor: 'red', padding: 5, marginTop: 5, borderRadius: 3 }}
         onPress={() => deleteImage(item.id)}
       >
-        <Text style={{ color: 'white' }}>Delete</Text>
+        <Text style={{ color: 'white', fontSize: 12 }}>Delete</Text>
       </TouchableOpacity>
     </View>
   );
+
+  const openImage = async (uri: string) => {
+    // For now, just show an alert. In a real app, you might open the image in a viewer
+    Alert.alert('Image', 'Image tapped', [{ text: 'OK' }]);
+  };
 
   return (
     <View style={{ flex: 1, padding: 20 }}>
@@ -91,6 +118,11 @@ export default function Index() {
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         numColumns={3}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 20, fontSize: 16, color: '#666' }}>
+            No edited images yet. Pick an image to start editing!
+          </Text>
+        }
       />
     </View>
   );

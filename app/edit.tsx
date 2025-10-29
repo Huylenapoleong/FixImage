@@ -74,7 +74,7 @@ export default function EditScreen() {
       console.log('Saved to media library:', asset.uri);
 
       // Also save to app database
-      await saveEditedImage(originalImage, asset.uri);
+      await saveEditedImage(originalImage, currentImage);
       console.log('Saved to DB');
 
       Alert.alert('Success', 'Image saved to gallery successfully!');
